@@ -3,10 +3,7 @@ class CodeDependency {
   constructor(node) {
     this.name = "CodeDependency";
     this.node = node;
-  }
-
-  get module() {
-    return node.text;
+    this.module = node.text;
   }
 }
 
