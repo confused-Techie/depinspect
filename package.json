@@ -1,0 +1,27 @@
+{
+  "name": "depinspect",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main.js",
+  "bin": {
+    "depinspect": "./bin/depinspect.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/confused-Techie/depinspect.git"
+  },
+  "keywords": [],
+  "author": "confused-Techie",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/confused-Techie/depinspect/issues"
+  },
+  "homepage": "https://github.com/confused-Techie/depinspect#readme",
+  "dependencies": {
+    "tree-sitter": "^0.20.6",
+    "tree-sitter-javascript": "^0.20.1"
+  }
+}
