@@ -22,6 +22,9 @@ async function run(args) {
   let deps = await collectDeps(opts);
 
   if (opts.inspect) {
+    // TEMP TODO
+    logOutput(deps);
+    process.exit(0);
     // We are intending to inspect the files we have been given
     let res = await inspectDeps(opts, deps);
 
