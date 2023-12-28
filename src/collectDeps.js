@@ -23,6 +23,9 @@ async function readManifest(opts) {
   if (fs.existsSync(path.join(opts.directory, "package.json"))) {
     let file = JSON.parse(fs.readFileSync(path.join(opts.directory, "package.json"), { encoding: "utf8" }));
     return new manifests.ManifestFileNodeJS(file);
+  } else if (fs.existsSync(path.join(path.parse(opts.directory).dir, "package.json"))) {
+    let file = JSON.parse(fs.readFileSync(path.join(path.parse(opts.directory).dir, "package.json"), { encoding: "utf8" }));
+    return new manifests.ManifestFileNodeJS(file);
   } else {
     return {};
   }

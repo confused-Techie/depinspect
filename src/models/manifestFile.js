@@ -3,43 +3,60 @@ class ManifestFile {
   constructor(file) {
     this.name = "ManifestFile";
     this.file = file;
+    this.dependencies = {};
+    this.devDependencies = {};
+    this.peerDependencies = {};
+    this.optionalDependencies = {};
   }
 
-  dependencyArray() {
-    throw new Error("Not implemented!");
+  init() {
+    // These methods MUST be declared by extenders
+    this.init_dependencies();
+    this.init_devDependencies();
+    this.init_peerDependencies();
+    this.init_optionalDependencies();
   }
 
-  dependencyVersion(dep) {
-    throw new Error("Not implemented!");
+  init_dependencies() {
+    console.warning("init_dependencies() Should be implmented by a consumer!");
   }
+
+  init_devDependencies() {
+    console.warning("init_devDependencies() Should be implemented by a consumer!");
+  }
+
+  init_peerDependencies() {
+    console.warning("init_peerDependencies() Should be implemented by a consumer!");
+  }
+
+  init_optionalDependencies() {
+    console.warning("init_optionalDependencies() Should be implemented by a consumer!");
+  }
+
 }
 
 class ManifestFileNodeJS extends ManifestFile {
   constructor(file) {
     super(file);
-    this.name = "ManifestFileNodeJS";
+    this.name = "ManifestNodeJS";
+
+    this.init();
   }
 
-  dependencyArray({ includeDev = true }) {
-    let arr = [];
-
-    if (Array.isArray(this.file.dependencies)) {
-      for (const dep of this.file.dependencies) {
-        arr.push(dep);
-      }
-    }
-
-    if (Array.isArray(this.file.devDependencies)) {
-      for (const devDep of this.file.devDependencies) {
-        arr.push(devDep);
-      }
-    }
-
-    return arr;
+  init_dependencies() {
+    this.dependencies = this.file.dependencies ?? {};
   }
 
-  dependencyVersion(dep) {
-    return this.file.dependencies[dep];
+  init_devDependencies() {
+    this.devDependencies = this.file.devDependencies ?? {};
+  }
+
+  init_peerDependencies() {
+    this.peerDependencies = this.file.peerDependencies ?? {};
+  }
+
+  init_optionalDependencies() {
+    this.optionalDependencies = this.file.optionalDependencies ?? {};
   }
 }
 

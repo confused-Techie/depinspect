@@ -24,6 +24,10 @@ function inspectTreeMain(tree, selector) {
       }
     }
 
+    if (process.VERBOSE) {
+      console.log("---");
+      console.log(matches);
+    }
     matches = partialMatches;
   }
 

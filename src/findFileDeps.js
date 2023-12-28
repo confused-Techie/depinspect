@@ -1,4 +1,3 @@
-//import alias from 'my-module';
 const path = require("path");
 const fs = require("fs");
 const Parser = require("tree-sitter");
@@ -33,6 +32,11 @@ async function findCodeDeps(ext, code) {
 
     const tree = parser.parse(code);
 
+    if (process.WRITE_NODE) {
+      const writeNodeObj = require("./writeNodeObj.js");
+      await writeNodeObj(tree);
+    }
+
     let dependencyNodes = [];
 
     for (let i = 0; i < detectors[ext].selectors.length; i++) {
@@ -56,25 +60,4 @@ async function findCodeDeps(ext, code) {
     console.error(`DepInspect doesn't know how to parse a file ending with: ${ext}! Skipping...`);
     return [];
   }
-}
-
-async function findJavascriptDeps(code) {
-  const { CodeDependency } = require("./models/codeDependency.js");
-  const language = require("tree-sitter-javascript");
-  const parser = new Parser();
-  parser.setLanguage(language);
-
-  const tree = parser.parse(code);
-
-  const selector = new Selector("call_expression.identifier[text=require][childCount=0]");
-
-  let nodes = inspectTree(tree, selector);
-
-  let dependencyNodes = [];
-
-  for (let i = 0; i < nodes.length; i++) {
-    dependencyNodes.push(new JavaScriptDependency(nodes[i]));
-  }
-
-  return dependencyNodes;
 }
