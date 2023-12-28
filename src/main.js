@@ -1,6 +1,7 @@
 const parseArgs = require("./parseArgs.js");
 const collectDeps = require("./collectDeps.js");
 const traceDeps = require("./traceDeps.js");
+const inspectDeps = require("./inspectDeps.js");
 const util = require("node:util");
 
 module.exports =
@@ -18,7 +19,10 @@ async function run(args) {
 
   if (opts.inspect) {
     // We are intending to inspect the files we have been given
+    let res = await inspectDeps(opts, deps);
 
+    logOutput(res);
+    process.exit(0);
   } else if (opts.trace) {
     // Trace the deps from the starting point, which is the file we have been provided
     let res = await traceDeps(opts, deps);
