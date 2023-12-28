@@ -8,7 +8,8 @@ module.exports =
 async function inspectDeps(opts) {
   let deps = {
     manifest: await readManifest(opts),
-    app: await getAppDeps(opts)
+    app: await getAppDeps(opts),
+    projectRoot: opts.directory
   };
 
   return deps;
@@ -43,7 +44,10 @@ async function getAppDeps(opts) {
       && !ignoreLists.files.includes(filename)
     ) {
       let fileDeps = await findFileDeps(file);
-      foundDeps[filename] = fileDeps;
+
+      // Then lets get the relative file path from the root of the project to our particular file
+      let relative = path.relative(opts.directory, file);
+      foundDeps[relative] = fileDeps;
     }
   };
 

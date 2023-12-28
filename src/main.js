@@ -15,6 +15,10 @@ async function run(args) {
     process.WRITE_NODE = true;
   }
 
+  if (opts.directory) {
+    process.DEPINSPECT_DIRECTORY = opts.directory;
+  }
+
   let deps = await collectDeps(opts);
 
   if (opts.inspect) {

@@ -4,8 +4,13 @@ module.exports =
 async function traceDeps(opts, deps) {
   // This function can be handed a deps object from `collectDeps`
   // and will use `opts.startTrace` to trace all modules required from that location
+  let initMod = path.relative(opts.directory, path.resolve(opts.startTrace));
 
-  let traceObj = await traceFileDeps(opts.startTrace, deps.app[getModuleNameFromPath(opts.startTrace)], deps);
+  if (!deps.app[initMod]) {
+    throw new Error(`Initial Trace point doesn't seem valid: ${initMod}`);
+  }
+
+  let traceObj = await traceFileDeps(opts.startTrace, deps.app[initMod], deps);
 
   let output;
 
@@ -23,6 +28,7 @@ async function traceDeps(opts, deps) {
 }
 
 async function traceFileDeps(moduleName, dep, deps) {
+  console.log(dep);
   let fileDeps = [];
 
   let modIterator = dep.nodes.entries();
@@ -30,11 +36,17 @@ async function traceFileDeps(moduleName, dep, deps) {
   for (const entry of modIterator) {
     let modEntry = entry[0];
 
-    let mod = getModuleNameFromPath(modEntry.module);
+    let mod = modEntry.module;
 
     if (deps.app[mod]) {
-      let deepFileDeps = await traceFileDeps(mod, deps.app[mod], deps);
-      fileDeps.push(deepFileDeps);
+      try {
+        let deepFileDeps = await traceFileDeps(mod, deps.app[mod], deps);
+        fileDeps.push(deepFileDeps);
+      } catch(err) {
+        console.error(err);
+        console.error(deps.app);
+        console.error(mod);
+      }
     } else {
       fileDeps.push({
         name: mod,
@@ -47,12 +59,6 @@ async function traceFileDeps(moduleName, dep, deps) {
     name: moduleName,
     modules: fileDeps
   };
-}
-
-function getModuleNameFromPath(mod) {
-  // The mod string, since it comes from code, may come with some string symbols
-  let modString = mod.replace(/"/g, "").replace(/'/g, "");
-  return path.parse(modString).base;
 }
 
 async function craftTraceString(trace, depth = "") {
