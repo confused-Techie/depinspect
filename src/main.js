@@ -8,6 +8,8 @@ module.exports =
 async function run(args) {
   const opts = parseArgs(args);
 
+  global.depinspectOpts = opts;
+
   if (opts.verbose) {
     process.VERBOSE = true;
   }
@@ -20,14 +22,18 @@ async function run(args) {
 
   if (opts.inspect) {
     // TEMP TODO
-    logOutput(deps);
-    process.exit(0);
+    // logOutput(deps);
+    // process.exit(0);
     // We are intending to inspect the files we have been given
     let res = await inspectDeps(opts, deps);
 
     logOutput(res);
     process.exit(0);
   } else if (opts.trace) {
+    console.log("cleanup trace steps");
+    // logOutput(deps);
+    // console.log(Object.keys(deps.app).length);
+    //  process.exit(0);
     // Trace the deps from the starting point, which is the file we have been provided
     let res = await traceDeps(opts, deps);
 

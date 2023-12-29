@@ -27,11 +27,21 @@ async function traceDeps(opts, deps) {
   return output;
 }
 
+let idx = 0;
+
 async function traceFileDeps(moduleName, dep, deps) {
+  idx = idx + 1;
+  console.log(`Dep: ${idx}`);
   let fileDeps = [];
 
   let modIterator = dep.nodes.entries();
 
+  if (idx > 100) {
+    return {
+      name: moduleName, modules: []
+    };
+  }
+  
   for (const entry of modIterator) {
     let modEntry = entry[0];
 

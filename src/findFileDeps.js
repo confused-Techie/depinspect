@@ -55,14 +55,21 @@ async function findCodeDeps(ext, code, filepath) {
 
         dep.module = detectors[ext].validateModule(dep.rawModule, filepath, process.DEPINSPECT_DIRECTORY);
 
-        //dep.validateModule(filepath, process.DEPINSPECT_DIRECTORY);
-        // This ensures we add our validated module from the rawModule
+        // The last stop we want to do is compare this `dep.module` value against
+        // our configs substitutions
+        if (depinspectOpts.substitutions[dep.module]) {
+          dep.module = depinspectOpts.substitutions[dep.module];
+        }
+
         dependencyNodes.push(dep);
       }
     }
 
     return dependencyNodes;
 
+    // Play around with some light cleanup
+    delete parser;
+    delete tree;
   } else {
     // We can't find any deps since we don't know how to parse.
     if (process.VERBOSE) {
