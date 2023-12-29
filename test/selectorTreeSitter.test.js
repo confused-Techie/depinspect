@@ -27,7 +27,7 @@ describe("integration tests", () => {
   });
 
   it("returns the correct imported module", () => {
-    const code = fs.readFileSync("./test/fixtures/mini-valid-import.js", { encoding: "utf8" });
+    const code = fs.readFileSync("./test/fixtures/mini-valid-import.mjs", { encoding: "utf8" });
 
     const parser = new Parser();
     parser.setLanguage(language);

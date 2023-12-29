@@ -11,9 +11,6 @@ async function run(args) {
   if (opts.verbose) {
     process.VERBOSE = true;
   }
-  if (opts.writeNode) {
-    process.WRITE_NODE = true;
-  }
 
   if (opts.directory) {
     process.DEPINSPECT_DIRECTORY = opts.directory;
