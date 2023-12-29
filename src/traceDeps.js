@@ -28,7 +28,6 @@ async function traceDeps(opts, deps) {
 }
 
 async function traceFileDeps(moduleName, dep, deps) {
-  console.log(dep);
   let fileDeps = [];
 
   let modIterator = dep.nodes.entries();
