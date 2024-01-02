@@ -4,14 +4,13 @@ const Parser = require("tree-sitter");
 const inspectTree = require("./inspectTree.js");
 const Selector = require("./selector.js");
 const FileDependency = require("./models/fileDependency.js");
-const SelectorTreeSitter = require("./selectorTreeSitter.js");
+const SelectorTreeSitter = require("selector-tree-sitter");
 
 module.exports =
-async function findFileDeps(filepath) {
+async function findFileDeps(filepath, unknownExtArray) {
   let ext = path.extname(filepath);
-  let file = fs.readFileSync(filepath, { encoding: "utf8" });
 
-  let depsFound = await findCodeDeps(ext, file, filepath);
+  let depsFound = await findCodeDeps(ext, filepath, unknownExtArray);
 
   const dep = new FileDependency();
   dep.filepath = filepath;
@@ -22,12 +21,14 @@ async function findFileDeps(filepath) {
   return dep;
 }
 
-async function findCodeDeps(ext, code, filepath) {
+async function findCodeDeps(ext, filepath, unknownExtArray) {
   // A Universal Code Dep Collection Function
   const { CodeDependency } = require("./models/codeDependency.js");
   const detectors = require("./detectors.js");
 
   if (detectors[ext]) {
+    const code = fs.readFileSync(filepath, { encoding: "utf8" });
+
     const parser = new Parser();
     parser.setLanguage(detectors[ext].language());
 
@@ -57,8 +58,9 @@ async function findCodeDeps(ext, code, filepath) {
 
         // The last stop we want to do is compare this `dep.module` value against
         // our configs substitutions
-        if (depinspectOpts.substitutions[dep.module]) {
-          dep.module = depinspectOpts.substitutions[dep.module];
+        let moduleNoWhitespace = dep.module.replace(/\s/g, "");
+        if (depinspectOpts.substitutions[moduleNoWhitespace]) {
+          dep.module = depinspectOpts.substitutions[moduleNoWhitespace];
         }
 
         dependencyNodes.push(dep);
@@ -72,8 +74,8 @@ async function findCodeDeps(ext, code, filepath) {
     delete tree;
   } else {
     // We can't find any deps since we don't know how to parse.
-    if (process.VERBOSE) {
-      console.error(`DepInspect doesn't know how to parse a file ending with: ${ext}! Skipping...`);
+    if (!unknownExtArray.includes(ext)) {
+      unknownExtArray.push(ext);
     }
     return [];
   }

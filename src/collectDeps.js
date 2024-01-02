@@ -34,6 +34,8 @@ async function readManifest(opts) {
 
 async function getAppDeps(opts) {
   let foundDeps = {};
+  let ignoredFiles = [];
+  let unhandledExts = [];
 
   const handleFile = async function(file, pathArray, filename, immediateReturn) {
     // By checking only the path array for ignored directories, we ensure to only
@@ -43,15 +45,24 @@ async function getAppDeps(opts) {
       pathArray.every((val) => { return !ignoreLists.directories.includes(val); })
       && !ignoreLists.files.includes(filename)
     ) {
-      let fileDeps = await findFileDeps(file);
+      let fileDeps = await findFileDeps(file, unhandledExts);
 
       // Then lets get the relative file path from the root of the project to our particular file
       let relative = path.relative(opts.directory, file);
       foundDeps[relative] = fileDeps;
+    } else {
+      ignoredFiles.push(filename);
     }
   };
 
   await enumerateFiles(opts.directory, [], handleFile);
+
+  if (process.VERBOSE) {
+    console.log("DepInspect ignored the following:");
+    console.log(ignoredFiles);
+    console.log("\n");
+    console.log(`DepInspect didn't know how to handle the following: ${unhandledExts.join(", ")}`);
+  }
 
   return foundDeps;
 }

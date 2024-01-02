@@ -1,5 +1,20 @@
 const path = require("path");
 
+// ANSI symbols taken from:
+// https://github.com/yangshun/tree-node-cli/tree/master
+const SYMBOLS_ANSI = {
+  BRANCH: '├── ',
+  EMPTY: '',
+  INDENT: '    ',
+  LAST_BRANCH: '└── ',
+  VERTICAL: '│   ',
+};
+
+// We use this to track uniqueness of the deps added.
+// This avoids a situation where two modules require each other,
+// and avoids them adding to the tree infinityly
+const depListing = [];
+
 module.exports =
 async function traceDeps(opts, deps) {
   // This function can be handed a deps object from `collectDeps`
@@ -36,12 +51,24 @@ async function traceFileDeps(moduleName, dep, deps) {
 
   let modIterator = dep.nodes.entries();
 
-  if (idx > 100) {
+  if (idx > 5000) {
+    // This number is largly random.
+    // But when scanning pulsar it will overflow our buffer in the millions of
+    // deps down.
     return {
-      name: moduleName, modules: []
+      name: moduleName, modules: [], truncated: true
     };
   }
-  
+
+  if (depListing.includes(moduleName)) {
+    // This module has already been included elsewhere
+    return {
+      name: `${moduleName}: Already listed in tree`, modules: []
+    };
+  } else {
+    depListing.push(moduleName);
+  }
+
   for (const entry of modIterator) {
     let modEntry = entry[0];
 
@@ -50,7 +77,9 @@ async function traceFileDeps(moduleName, dep, deps) {
     if (deps.app[mod]) {
       try {
         let deepFileDeps = await traceFileDeps(mod, deps.app[mod], deps);
+
         fileDeps.push(deepFileDeps);
+
       } catch(err) {
         console.error(err);
         console.error(deps.app);
@@ -70,14 +99,50 @@ async function traceFileDeps(moduleName, dep, deps) {
   };
 }
 
-async function craftTraceString(trace, depth = "") {
+async function craftTraceString(trace, depth = 0, finalEntry = false) {
   let str = "";
-  str += `${depth}${(depth.length > 0) ? " " : ""}${trace.name}\n`;
+  let char;
 
-  depth += "+";
+  if (depth === 0) {
+    char = SYMBOLS_ANSI.EMPTY;
+  } else if (depth === 1) {
+    if (finalEntry) {
+      char = SYMBOLS_ANSI.LAST_BRANCH;
+    } else {
+      char = SYMBOLS_ANSI.BRANCH;
+    }
+  } else if (depth > 1) {
+    char = "";
+    for (let i = 0; i < depth - 1; i++) {
+      char += SYMBOLS_ANSI.VERTICAL;
+    }
+    if (finalEntry) {
+      char += SYMBOLS_ANSI.LAST_BRANCH;
+    } else {
+      char += SYMBOLS_ANSI.BRANCH;
+    }
+  }
 
-  for (let mod of trace.modules) {
-    str += await craftTraceString(mod, depth);
+  str += `${char}${trace.name}\n`;
+
+  depth = depth + 1;
+
+  if (trace.modules.length === 0 && trace.truncated) {
+    // If we find a truncated module, make this obvious by using '...' as
+    // the module name, and set it to the final entry
+    str += await craftTraceString(
+      {
+        name: "...",
+        modules: []
+      },
+      depth,
+      true
+    );
+  }
+
+  for (let [idx, mod] of trace.modules.entries()) {
+    let final = (idx === trace.modules.length - 1);
+    str += await craftTraceString(mod, depth, final);
   }
 
   return str;
