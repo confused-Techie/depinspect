@@ -6,6 +6,9 @@ class FileDependency {
     this.file;
     this.ext;
     this.nodes = new Set();
+    // Helpful for later steps that try to rely on `kind` info from code
+    // dependencies, we add it arbitrarily here
+    this.kind = "file";
   }
 
   addCodeDependents(deps) {

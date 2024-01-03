@@ -54,7 +54,11 @@ async function findCodeDeps(ext, filepath, unknownExtArray) {
           dep.rawModule = dep.node;
         }
 
-        dep.module = detectors[ext].validateModule(dep.rawModule, filepath, process.DEPINSPECT_DIRECTORY);
+        let validateModule = detectors[ext].validateModule(dep.rawModule, filepath, process.DEPINSPECT_DIRECTORY);
+        dep.module = validateModule.module;
+        if (typeof validateModule.kind === "string") {
+          dep.kind = validateModule.kind;
+        }
 
         // The last stop we want to do is compare this `dep.module` value against
         // our configs substitutions
@@ -67,11 +71,12 @@ async function findCodeDeps(ext, filepath, unknownExtArray) {
       }
     }
 
-    return dependencyNodes;
-
     // Play around with some light cleanup
     delete parser;
     delete tree;
+    
+    return dependencyNodes;
+
   } else {
     // We can't find any deps since we don't know how to parse.
     if (!unknownExtArray.includes(ext)) {

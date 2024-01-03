@@ -35,22 +35,22 @@ module.exports = {
         // Likely means the module isn't installed or available locally
         // which is fine, we will assume this just means the module should
         // be installed, and return the cleaned string
-        return mod;
+        return { module: mod, kind: "dependency" };
       }
 
       if (modRequire.includes("node_modules")) {
         // Looks like an assigned module. Return the cleaned string
-        return mod;
+        return { module: mod, kind: "dependency" };
       } else {
         // This isn't an installed module
         if (isBuiltin(modRequire)) {
           // This module was resolve to just a module name, since it's built in
           // we can still just return the cleaned up string
-          return mod;
+          return { module: mod, kind: "builtin" };
         } else {
           // Looks like we successfully resolved a file to it's filename
           // but we will want to make sure to relativilizes
-          return path.relative(rootFilePath, modRequire);
+          return { module: path.relative(rootFilePath, modRequire), kind: "file" };
         }
       }
     }

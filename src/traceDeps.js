@@ -10,6 +10,20 @@ const SYMBOLS_ANSI = {
   VERTICAL: '│   ',
 };
 
+// ANSI Color Codes taken from:
+// https://stackoverflow.com/a/5762502
+const ANSI_CODES = {
+  RESET: "\u001B[0m",
+  BLACK: "\u001B[30m",
+  RED: "\u001B[31m",
+  GREEN: "\u001B[32m",
+  YELLOW: "\u001B[33m",
+  BLUE: "\u001B[34m",
+  PURPLE: "\u001B[35m",
+  CYAN: "\u001B[36m",
+  WHITE: "\u001B[37m"
+};
+
 // We use this to track uniqueness of the deps added.
 // This avoids a situation where two modules require each other,
 // and avoids them adding to the tree infinityly
@@ -47,6 +61,7 @@ let idx = 0;
 async function traceFileDeps(moduleName, dep, deps) {
   idx = idx + 1;
   console.log(`Dep: ${idx}`);
+  console.log(dep);
   let fileDeps = [];
 
   let modIterator = dep.nodes.entries();
@@ -56,14 +71,14 @@ async function traceFileDeps(moduleName, dep, deps) {
     // But when scanning pulsar it will overflow our buffer in the millions of
     // deps down.
     return {
-      name: moduleName, modules: [], truncated: true
+      name: moduleName, kind: dep.kind, modules: [], truncated: true
     };
   }
 
   if (depListing.includes(moduleName)) {
     // This module has already been included elsewhere
     return {
-      name: `${moduleName}: Already listed in tree`, modules: []
+      name: `${moduleName}: Already listed in tree`, kind: dep.kind, modules: []
     };
   } else {
     depListing.push(moduleName);
@@ -88,6 +103,7 @@ async function traceFileDeps(moduleName, dep, deps) {
     } else {
       fileDeps.push({
         name: mod,
+        kind: modEntry.kind,
         modules: []
       });
     }
@@ -95,6 +111,7 @@ async function traceFileDeps(moduleName, dep, deps) {
 
   return {
     name: moduleName,
+    kind: dep.kind,
     modules: fileDeps
   };
 }
@@ -123,7 +140,19 @@ async function craftTraceString(trace, depth = 0, finalEntry = false) {
     }
   }
 
-  str += `${char}${trace.name}\n`;
+  let colorCode;
+
+  if (trace.kind === "file") {
+    colorCode = ANSI_CODES.CYAN;
+  } else if (trace.kind === "builtin") {
+    colorCode = ANSI_CODES.YELLOW;
+  } else if (trace.kind === "dependency") {
+    colorCode = ANSI_CODES.RED;
+  } else {
+    colorCode = "";
+  }
+
+  str += `${char}${colorCode}${trace.name}${ANSI_CODES.RESET}\n`;
 
   depth = depth + 1;
 
